@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Flickr Saver</string>
+    <string name="search_title">Search Flickr</string>
+    <string name="search_hint">Search Flickr</string>
+    <string name="imageview_content_description">ImageView for Flickr Search results</string>
+    <string name="empty_text">Search for an image on Flickr using the search icon!</string>
+    <string name="photo_search_method">flickr.photos.search</string>
+    <string name="api_key">6343a66eb46c461c91934e8a7a981056</string>
+    <string name="json_format">json</string>
+    <string name="image_url">https://farm%1$s.staticflickr.com/%2$s/%3$s_%4$s.jpg</string>
+    <string name="loading">Loading…</string>
+    <string name="json_error">Unable to parse response</string>
+    <string name="load_more">Load More…</string>
+    <string name="saved_from_flickr">Saved Image from Flickr</string>
+    <string name="saved_message">Image Saved at %1$s</string>
+    <string name="permission_denied">Permissions Denied for writing to external storage, please enable them to save the image</string>
+</resources>
