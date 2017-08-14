@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -52,8 +53,10 @@ public class FlickrSearchActivity extends AppCompatActivity {
             TAG = FlickrSearchActivity.class.getSimpleName();
     private static final String BASE_FLICKR_URL =
             "https://api.flickr.com/";
+    private static final String IMG_KEY = "images";
 
     static final String URL_KEY = "imgUrl";
+
 
     // Constant used to prevent the response being wrapped in a JSON callback
     private static final int JSON_CALLBACK = 1;
@@ -77,8 +80,16 @@ public class FlickrSearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_flickr_search);
         initializeDataAndViews();
 
+        if (savedInstanceState != null) {
+            mEmptyTextView.setText("");
+            mImageUrls = savedInstanceState.getStringArrayList(IMG_KEY);
+            mAdapter.swapData(savedInstanceState.getStringArrayList(IMG_KEY));
+        }
+
         // TODO: implement persistence of some kind (SharedPrefs, SQLLite)
     }
+
+
 
     private void initializeDataAndViews() {
         mEmptyTextView = findViewById(R.id.emptyText);
@@ -92,6 +103,7 @@ public class FlickrSearchActivity extends AppCompatActivity {
         final int numColumns = getResources().getInteger(R.integer.num_columns);
         GridLayoutManager layoutManager = new GridLayoutManager(this,
                numColumns);
+        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(mAdapter);
     }
@@ -99,6 +111,8 @@ public class FlickrSearchActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         // Handle the search, starting with page 1
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            mImageUrls.clear();
+            mAdapter.notifyDataSetChanged();
             mQuery = intent.getStringExtra(SearchManager.QUERY);
             mCurrentPage = 1;
             performSearch(mQuery, mCurrentPage);
@@ -147,14 +161,11 @@ public class FlickrSearchActivity extends AppCompatActivity {
                 try {
                     // Remove the loading UI
                     mImageUrls.remove(getString(R.string.loading));
-                    mAdapter.notifyItemRemoved
-                            (mImageUrls.indexOf(getString(R.string.loading)));
 
                     // Remove the load more button (will be added at the end
                     // of the data)
                     mImageUrls.remove(getString(R.string.load_more));
-                    mAdapter.notifyItemRemoved
-                            (mImageUrls.indexOf(getString(R.string.load_more)));
+                    mAdapter.notifyDataSetChanged();
 
                     // Get the image urls
                     JSONObject jsonResponse = new
@@ -176,14 +187,16 @@ public class FlickrSearchActivity extends AppCompatActivity {
 
                         // Add the URLs to the data set an update the UI
                         mImageUrls.add(url);
-                        mAdapter.notifyItemInserted(mImageUrls.size());
+                        mAdapter.notifyItemInserted(mImageUrls.indexOf(url));
                     }
 
 
                     // Add an extra line, used to setup the load more button
                     // Usually I would use a wrapper object with a ViewType
                     mImageUrls.add(getString(R.string.load_more));
-                    mAdapter.notifyDataSetChanged();
+                    mAdapter.notifyItemInserted
+                            (mImageUrls.indexOf(getString(R.string.load_more)));
+
 
                     // TODO: catch when the API runs out of results
                 } catch (JSONException | IOException e) {
@@ -227,7 +240,21 @@ public class FlickrSearchActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.clear_search: {
+                mImageUrls.clear();
+                mEmptyTextView.setText(R.string.empty_text);
+                mAdapter.notifyDataSetChanged();
+                break;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putStringArrayList(IMG_KEY, mImageUrls);
         super.onSaveInstanceState(outState);
     }
 
@@ -264,11 +291,12 @@ public class FlickrSearchActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            if (mImageUrls.get(position)
+            if (mImageUrls.get(holder.getAdapterPosition())
                     .equals(getString(R.string.loading))) {
                 holder.progressBar.setVisibility(View.VISIBLE);
                 holder.imageView.setImageDrawable(null);
-            } else if (mImageUrls.get(position).equals(getString(R.string.load_more))) {
+            } else if (mImageUrls.get(holder.getAdapterPosition())
+                    .equals(getString(R.string.load_more))) {
                 holder.imageView.setImageDrawable(ContextCompat
                         .getDrawable(FlickrSearchActivity.this,
                         R.drawable.ic_add));
@@ -319,6 +347,12 @@ public class FlickrSearchActivity extends AppCompatActivity {
         @Override
         public int getItemCount() {
             return mImageUrls.size();
+        }
+
+
+        private void swapData(ArrayList<String> newData) {
+            this.mImageUrls = newData;
+            notifyDataSetChanged();
         }
 
         // ViewHolder classes handle their own clicks.

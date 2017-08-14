@@ -14,4 +14,5 @@
     <string name="saved_from_flickr">Saved Image from Flickr</string>
     <string name="saved_message">Image Saved at %1$s</string>
     <string name="permission_denied">Permissions Denied for writing to external storage, please enable them to save the image</string>
+    <string name="clear_search">Clear Search</string>
 </resources>
